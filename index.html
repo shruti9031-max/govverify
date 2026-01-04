@@ -1,0 +1,945 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GovVerify AI - Detect Fake Government Notices</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #2c3e50;
+            background: #f8f9fa;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        /* Header */
+        header {
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            color: white;
+            padding: 15px 0;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 24px;
+            font-weight: bold;
+            animation: slideInLeft 0.6s ease-out;
+        }
+
+        .logo-icon {
+            width: 45px;
+            height: 45px;
+            background: white;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        .nav-menu {
+            display: flex;
+            list-style: none;
+            gap: 30px;
+            align-items: center;
+        }
+
+        .nav-menu a {
+            color: white;
+            text-decoration: none;
+            font-weight: 500;
+            transition: all 0.3s;
+            padding: 8px 12px;
+            border-radius: 6px;
+        }
+
+        .nav-menu a:hover {
+            background: rgba(255,255,255,0.2);
+            transform: translateY(-2px);
+        }
+
+        .btn-primary {
+            background: #27ae60;
+            color: white;
+            padding: 12px 28px;
+            border-radius: 6px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s;
+            border: none;
+            cursor: pointer;
+            display: inline-block;
+        }
+
+        .btn-primary:hover {
+            background: #229954;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(39, 174, 96, 0.3);
+        }
+
+        .btn-secondary {
+            background: transparent;
+            color: #1e3c72;
+            padding: 12px 28px;
+            border: 2px solid #1e3c72;
+            border-radius: 6px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s;
+            display: inline-block;
+        }
+
+        .btn-secondary:hover {
+            background: #1e3c72;
+            color: white;
+        }
+
+        /* Hero Section */
+        .hero {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 80px 0;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url('data:image/svg+xml,<svg width="100" height="100" xmlns="http://www.w3.org/2000/svg"><circle cx="50" cy="50" r="2" fill="white" opacity="0.1"/></svg>');
+            opacity: 0.3;
+        }
+
+        .hero-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 60px;
+            align-items: center;
+            position: relative;
+        }
+
+        .hero-text {
+            padding-right: 40px;
+        }
+
+        .hero-text h1 {
+            font-size: 48px;
+            margin-bottom: 20px;
+            line-height: 1.2;
+            animation: slideInLeft 0.8s ease-out;
+        }
+
+        .hero-text p {
+            font-size: 20px;
+            margin-bottom: 30px;
+            opacity: 0.95;
+            animation: slideInLeft 1s ease-out;
+        }
+
+        .hero-buttons {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+            animation: slideInLeft 1.2s ease-out;
+        }
+
+        .hero-illustration {
+            text-align: center;
+            font-size: 180px;
+            animation: float 3s ease-in-out infinite;
+        }
+
+        @keyframes slideInLeft {
+            from {
+                opacity: 0;
+                transform: translateX(-50px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        @keyframes float {
+            0%, 100% {
+                transform: translateY(0px);
+            }
+            50% {
+                transform: translateY(-20px);
+            }
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes scaleIn {
+            from {
+                opacity: 0;
+                transform: scale(0.9);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        @keyframes pulse {
+            0%, 100% {
+                transform: scale(1);
+            }
+            50% {
+                transform: scale(1.05);
+            }
+        }
+
+        /* Problem Section */
+        .problem {
+            padding: 80px 0;
+            background: white;
+        }
+
+        .section-title {
+            text-align: center;
+            font-size: 38px;
+            margin-bottom: 50px;
+            color: #1e3c72;
+            animation: fadeInUp 0.6s ease-out;
+        }
+
+        .problem-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 30px;
+        }
+
+        .problem-card {
+            background: #fff5f5;
+            padding: 30px;
+            border-radius: 12px;
+            border-left: 4px solid #e74c3c;
+            transition: all 0.3s;
+            animation: fadeInUp 0.6s ease-out backwards;
+        }
+
+        .problem-card:nth-child(1) { animation-delay: 0.1s; }
+        .problem-card:nth-child(2) { animation-delay: 0.2s; }
+        .problem-card:nth-child(3) { animation-delay: 0.3s; }
+
+        .problem-card:hover {
+            transform: translateY(-5px);
+            background: linear-gradient(135deg, #ffebee 0%, #ffcdd2 100%);
+            border-left: 4px solid #c62828;
+            box-shadow: 0 8px 25px rgba(230, 74, 25, 0.3);
+        }
+
+        .problem-card:hover h3 {
+            color: #b71c1c;
+        }
+
+        .problem-icon {
+            font-size: 48px;
+            margin-bottom: 15px;
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        .problem-card h3 {
+            color: #c0392b;
+            margin-bottom: 10px;
+            font-size: 22px;
+            transition: color 0.3s;
+        }
+
+        /* Solution Section */
+        .solution {
+            padding: 80px 0;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+        }
+
+        .solution-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 30px;
+        }
+
+        .solution-card {
+            background: white;
+            padding: 35px;
+            border-radius: 12px;
+            text-align: center;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            transition: all 0.3s;
+            animation: scaleIn 0.6s ease-out backwards;
+            border: 2px solid transparent;
+        }
+
+        .solution-card:nth-child(1) { animation-delay: 0.1s; }
+        .solution-card:nth-child(2) { animation-delay: 0.2s; }
+        .solution-card:nth-child(3) { animation-delay: 0.3s; }
+        .solution-card:nth-child(4) { animation-delay: 0.4s; }
+
+        .solution-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+            background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+            border: 2px solid #1976d2;
+        }
+
+        .solution-card:hover h3 {
+            color: #0d47a1;
+        }
+
+        .solution-icon {
+            font-size: 56px;
+            margin-bottom: 20px;
+            display: inline-block;
+            animation: float 3s ease-in-out infinite;
+        }
+
+        .solution-card:nth-child(2) .solution-icon {
+            animation-delay: 0.5s;
+        }
+
+        .solution-card:nth-child(3) .solution-icon {
+            animation-delay: 1s;
+        }
+
+        .solution-card:nth-child(4) .solution-icon {
+            animation-delay: 1.5s;
+        }
+
+        .solution-card h3 {
+            color: #1e3c72;
+            margin-bottom: 15px;
+            font-size: 22px;
+            transition: color 0.3s;
+        }
+
+        /* How It Works */
+        .how-it-works {
+            padding: 80px 0;
+            background: white;
+        }
+
+        .steps-container {
+            display: flex;
+            justify-content: space-between;
+            gap: 20px;
+            flex-wrap: wrap;
+            margin-top: 50px;
+        }
+
+        .step {
+            flex: 1;
+            min-width: 180px;
+            text-align: center;
+            position: relative;
+            animation: fadeInUp 0.8s ease-out backwards;
+            padding: 20px;
+            border-radius: 12px;
+            transition: all 0.3s;
+        }
+
+        .step:nth-child(1) { animation-delay: 0.2s; }
+        .step:nth-child(2) { animation-delay: 0.4s; }
+        .step:nth-child(3) { animation-delay: 0.6s; }
+        .step:nth-child(4) { animation-delay: 0.8s; }
+        .step:nth-child(5) { animation-delay: 1s; }
+
+        .step:hover {
+            background: linear-gradient(135deg, #f3e5f5 0%, #e1bee7 100%);
+            transform: scale(1.05);
+        }
+
+        .step h4 {
+            transition: color 0.3s;
+        }
+
+        .step:hover h4 {
+            color: #6a1b9a;
+        }
+
+        .step-number {
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            font-weight: bold;
+            margin: 0 auto 20px;
+            transition: transform 0.3s;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .step:hover .step-number {
+            transform: scale(1.1) rotate(360deg);
+        }
+
+        .step h4 {
+            color: #1e3c72;
+            margin-bottom: 10px;
+            transition: color 0.3s;
+        }
+
+        /* Impact Section */
+        .impact {
+            padding: 80px 0;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            color: white;
+        }
+
+        .impact-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 40px;
+            margin-top: 50px;
+        }
+
+        .impact-card {
+            text-align: center;
+            padding: 30px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 12px;
+            backdrop-filter: blur(10px);
+            animation: fadeInUp 0.8s ease-out backwards;
+            transition: all 0.3s;
+            border: 2px solid transparent;
+        }
+
+        .impact-card:nth-child(1) { animation-delay: 0.2s; }
+        .impact-card:nth-child(2) { animation-delay: 0.4s; }
+        .impact-card:nth-child(3) { animation-delay: 0.6s; }
+
+        .impact-card:hover {
+            transform: scale(1.05);
+            background: linear-gradient(135deg, rgba(255,255,255,0.25) 0%, rgba(255,255,255,0.15) 100%);
+            border: 2px solid rgba(255,255,255,0.5);
+            box-shadow: 0 8px 30px rgba(255,255,255,0.2);
+        }
+
+        .impact-icon {
+            font-size: 64px;
+            margin-bottom: 20px;
+            display: inline-block;
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        .impact-card h3 {
+            font-size: 28px;
+            margin-bottom: 10px;
+        }
+
+        /* CTA Section */
+        .cta {
+            padding: 80px 0;
+            background: linear-gradient(135deg, #27ae60 0%, #229954 100%);
+            color: white;
+            text-align: center;
+        }
+
+        .cta h2 {
+            font-size: 42px;
+            margin-bottom: 30px;
+            animation: fadeInUp 0.6s ease-out;
+        }
+
+        .btn-cta {
+            background: white;
+            color: #27ae60;
+            padding: 18px 45px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 700;
+            font-size: 18px;
+            display: inline-block;
+            transition: all 0.3s;
+            animation: fadeInUp 0.8s ease-out;
+        }
+
+        .btn-cta:hover {
+            transform: scale(1.05);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+            animation: pulse 1s ease-in-out infinite;
+        }
+
+        /* Footer */
+        footer {
+            background: #2c3e50;
+            color: white;
+            padding: 50px 0 20px;
+        }
+
+        .footer-content {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 40px;
+            margin-bottom: 30px;
+        }
+
+        .disclaimer {
+            background: #34495e;
+            padding: 20px;
+            border-radius: 8px;
+            border-left: 4px solid #f39c12;
+        }
+
+        .disclaimer h4 {
+            color: #f39c12;
+            margin-bottom: 10px;
+        }
+
+        .footer-links h4 {
+            margin-bottom: 15px;
+        }
+
+        .footer-links a {
+            display: block;
+            color: #ecf0f1;
+            text-decoration: none;
+            margin-bottom: 10px;
+            transition: color 0.3s;
+        }
+
+        .footer-links a:hover {
+            color: #3498db;
+        }
+
+        .copyright {
+            text-align: center;
+            padding-top: 20px;
+            border-top: 1px solid #34495e;
+            color: #95a5a6;
+        }
+
+        /* Responsive */
+        @media (max-width: 1024px) {
+            .container {
+                padding: 0 30px;
+            }
+
+            .hero-text h1 {
+                font-size: 42px;
+            }
+
+            .hero-text p {
+                font-size: 18px;
+            }
+
+            .section-title {
+                font-size: 34px;
+            }
+
+            .problem-grid,
+            .solution-grid,
+            .impact-grid {
+                grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+                gap: 25px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .hero-content {
+                grid-template-columns: 1fr;
+                gap: 40px;
+            }
+
+            .hero-text {
+                padding-right: 0;
+                text-align: center;
+            }
+
+            .hero-text h1 {
+                font-size: 32px;
+            }
+
+            .hero-text p {
+                font-size: 16px;
+            }
+
+            .hero-buttons {
+                justify-content: center;
+            }
+
+            .hero-illustration {
+                font-size: 100px;
+                order: -1;
+            }
+
+            .hero {
+                padding: 60px 0;
+            }
+
+            nav {
+                justify-content: center;
+            }
+
+            .nav-menu {
+                display: none;
+            }
+
+            .logo {
+                margin: 0 auto;
+            }
+
+            .section-title {
+                font-size: 28px;
+                margin-bottom: 35px;
+            }
+
+            .problem,
+            .solution,
+            .how-it-works,
+            .impact,
+            .cta {
+                padding: 60px 0;
+            }
+
+            .problem-grid,
+            .solution-grid,
+            .impact-grid {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+
+            .steps-container {
+                flex-direction: column;
+                gap: 30px;
+            }
+
+            .step {
+                min-width: 100%;
+            }
+
+            .footer-content {
+                grid-template-columns: 1fr;
+                gap: 30px;
+            }
+
+            .cta h2 {
+                font-size: 28px;
+            }
+
+            .btn-primary,
+            .btn-secondary,
+            .btn-cta {
+                width: 100%;
+                text-align: center;
+                padding: 14px 24px;
+            }
+
+            .hero-buttons {
+                flex-direction: column;
+                width: 100%;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .container {
+                padding: 0 15px;
+            }
+
+            .hero-text h1 {
+                font-size: 26px;
+                line-height: 1.3;
+            }
+
+            .hero-text p {
+                font-size: 14px;
+            }
+
+            .hero-illustration {
+                font-size: 80px;
+            }
+
+            .logo {
+                font-size: 20px;
+            }
+
+            .logo-icon {
+                width: 38px;
+                height: 38px;
+                font-size: 20px;
+            }
+
+            .section-title {
+                font-size: 24px;
+            }
+
+            .problem-card,
+            .solution-card,
+            .impact-card {
+                padding: 20px;
+            }
+
+            .problem-icon,
+            .solution-icon {
+                font-size: 40px;
+            }
+
+            .impact-icon {
+                font-size: 50px;
+            }
+
+            .cta h2 {
+                font-size: 24px;
+            }
+
+            .btn-cta {
+                font-size: 16px;
+                padding: 14px 30px;
+            }
+
+            .step-number {
+                width: 50px;
+                height: 50px;
+                font-size: 20px;
+            }
+
+            footer {
+                padding: 40px 0 15px;
+            }
+
+            .disclaimer {
+                padding: 15px;
+            }
+        }
+
+        @media (max-width: 360px) {
+            .hero-text h1 {
+                font-size: 22px;
+            }
+
+            .section-title {
+                font-size: 22px;
+            }
+
+            .cta h2 {
+                font-size: 20px;
+            }
+
+            .logo {
+                font-size: 18px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header>
+        <nav class="container">
+            <div class="logo">
+                <div class="logo-icon">🛡️</div>
+                <span>GovVerify AI</span>
+            </div>
+            <ul class="nav-menu">
+                <li><a href="#home">Home</a></li>
+                <li><a href="#verify">Verify Notice</a></li>
+                <li><a href="#how">How It Works</a></li>
+                <li><a href="#admin">Admin (Demo)</a></li>
+                <li><a href="#verify" class="btn-primary">Verify Notice</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <!-- Hero Section -->
+    <section class="hero" id="home">
+        <div class="container">
+            <div class="hero-content">
+                <div class="hero-text">
+                    <h1>Verify Government Notices Before You Trust Them</h1>
+                    <p>An AI-powered system to detect fake government notices and yojana scams in real time.</p>
+                    <div class="hero-buttons">
+                        <a href="#verify" class="btn-primary">Verify Notice Now</a>
+                        <a href="#how" class="btn-secondary">How It Works</a>
+                    </div>
+                </div>
+                <div class="hero-illustration">
+                    🤖📄
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Problem Section -->
+    <section class="problem">
+        <div class="container">
+            <h2 class="section-title">The Problem of Fake Government Notices</h2>
+            <div class="problem-grid">
+                <div class="problem-card">
+                    <div class="problem-icon">⚠️</div>
+                    <h3>Fake Yojana Messages</h3>
+                    <p>Citizens receive fraudulent scheme messages promising fake government benefits and subsidies.</p>
+                </div>
+                <div class="problem-card">
+                    <div class="problem-icon">📱</div>
+                    <h3>WhatsApp Scams</h3>
+                    <p>Viral forwards claiming to be official government notices spread misinformation rapidly.</p>
+                </div>
+                <div class="problem-card">
+                    <div class="problem-icon">📑</div>
+                    <h3>Fraudulent PDFs</h3>
+                    <p>Fake documents with official-looking logos and seals deceive vulnerable citizens.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Solution Section -->
+    <section class="solution">
+        <div class="container">
+            <h2 class="section-title">Our AI-Based Solution</h2>
+            <div class="solution-grid">
+                <div class="solution-card">
+                    <div class="solution-icon">📄</div>
+                    <h3>Document & PDF Scan</h3>
+                    <p>Upload any notice or PDF for instant AI-powered analysis and verification.</p>
+                </div>
+                <div class="solution-card">
+                    <div class="solution-icon">🔍</div>
+                    <h3>Fake vs Real Detection</h3>
+                    <p>Advanced machine learning identifies patterns in authentic vs fraudulent notices.</p>
+                </div>
+                <div class="solution-card">
+                    <div class="solution-icon">💬</div>
+                    <h3>WhatsApp / SMS Verification</h3>
+                    <p>Verify forwarded messages and SMS against official government databases.</p>
+                </div>
+                <div class="solution-card">
+                    <div class="solution-icon">✅</div>
+                    <h3>Trust Score & Sources</h3>
+                    <p>Get a credibility score with links to official government sources for confirmation.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- How It Works -->
+    <section class="how-it-works" id="how">
+        <div class="container">
+            <h2 class="section-title">How It Works</h2>
+            <div class="steps-container">
+                <div class="step">
+                    <div class="step-number">1</div>
+                    <h4>Upload Notice</h4>
+                    <p>Submit your document, image, or text message</p>
+                </div>
+                <div class="step">
+                    <div class="step-number">2</div>
+                    <h4>OCR Extracts Text</h4>
+                    <p>AI extracts all text and metadata from the document</p>
+                </div>
+                <div class="step">
+                    <div class="step-number">3</div>
+                    <h4>AI Analyzes Patterns</h4>
+                    <p>Machine learning identifies authenticity markers</p>
+                </div>
+                <div class="step">
+                    <div class="step-number">4</div>
+                    <h4>Govt Data Verification</h4>
+                    <p>Cross-checks against official government databases</p>
+                </div>
+                <div class="step">
+                    <div class="step-number">5</div>
+                    <h4>Trust Score Generated</h4>
+                    <p>Receive instant verdict with evidence and sources</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Impact Section -->
+    <section class="impact">
+        <div class="container">
+            <h2 class="section-title">Our Impact</h2>
+            <div class="impact-grid">
+                <div class="impact-card">
+                    <div class="impact-icon">🛡️</div>
+                    <h3>Prevents Fraud</h3>
+                    <p>Protects citizens from financial scams and identity theft attempts</p>
+                </div>
+                <div class="impact-card">
+                    <div class="impact-icon">🤝</div>
+                    <h3>Improves Public Trust</h3>
+                    <p>Builds confidence in genuine government communications and schemes</p>
+                </div>
+                <div class="impact-card">
+                    <div class="impact-icon">🏛️</div>
+                    <h3>Supports Digital Governance</h3>
+                    <p>Strengthens India's digital infrastructure and e-governance initiatives</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA Section -->
+    <section class="cta" id="verify">
+        <div class="container">
+            <h2>Don't trust fake notices. Verify first.</h2>
+            <a href="#verify" class="btn-cta">Start Verification</a>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer>
+        <div class="container">
+            <div class="footer-content">
+                <div class="disclaimer">
+                    <h4>⚠️ Disclaimer</h4>
+                    <p>This is a prototype system developed for academic and research purposes. Not an official government platform. Always verify critical information through official government channels.</p>
+                </div>
+                <div class="footer-links">
+                    <h4>Official Resources</h4>
+                    <a href="https://india.gov.in" target="_blank">🇮🇳 india.gov.in</a>
+                    <a href="https://pib.gov.in" target="_blank">📰 pib.gov.in</a>
+                    <a href="https://mygov.in" target="_blank">💼 mygov.in</a>
+                </div>
+            </div>
+            <div class="copyright">
+                <p>&copy; 2026 GovVerify AI. An Academic Research Project.</p>
+            </div>
+        </div>
+    </footer>
+</body>
+</html>
+https://github.com/shruti9031-max/govverify-ai.git
